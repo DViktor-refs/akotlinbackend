@@ -60,5 +60,9 @@ application {
 tasks.withType<ShadowJar> {
     // Determinisztikus nev, hogy a Railway start parancs mindig ezt indithassa.
     archiveFileName.set("app.jar")
+    // A fat jar manifestjebe beegetjuk a fo osztalyt (a top-level main() -> ApplicationKt).
+    manifest {
+        attributes["Main-Class"] = "com.webshop.ApplicationKt"
+    }
     mergeServiceFiles()
 }
