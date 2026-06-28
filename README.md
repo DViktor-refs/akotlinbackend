@@ -71,7 +71,7 @@ Szukseged lesz **JDK 17+**-ra es egy futo **PostgreSQL**-re.
 
 ```bash
 cp .env.example .env      # toltsd ki az ertekeket (lasd lent)
-./gradlew build           # fat jar: build/libs/app.jar
+./gradlew shadowJar       # fat jar: build/libs/app.jar
 java -jar build/libs/app.jar
 ```
 
@@ -100,11 +100,15 @@ curl -X POST http://localhost:3000/api/auth/login \
 2. Add hozza a **PostgreSQL** plugint – ez automatikusan beallitja a `DATABASE_URL`-t.
 3. Allitsd be a kornyezeti valtozokat (lasd `.env.example`): legalabb a `JWT_SECRET`,
    `BARION_POSKEY`, `BARION_PAYEE`, es deploy utan a `BASE_URL` (a kapott domain).
-4. A Railway a `railway.json` alapjan epit (Nixpacks) es a fat jart inditja:
-   `java -jar build/libs/app.jar`.
+4. A Railway a **`Dockerfile`** alapjan epit (`railway.json` -> builder: DOCKERFILE).
+   A Dockerfile ket lepcsoben dolgozik:
+   - **build:** `gradle clean shadowJar` -> `build/libs/app.jar` (fat jar, minden fuggoseggel),
+   - **runtime:** egy kis JRE image, ami a kesz jart inditja: `java -jar /app/app.jar`.
 
-A build a Gradle wrappert hasznalja (`./gradlew build`), ami legyartja a
-`build/libs/app.jar` fat jart, abban minden fuggoseggel.
+A fat jar manifest `Main-Class`-a a `com.webshop.ApplicationKt` (a top-level `main()`).
+
+> A `PORT`-ot a Railway adja futasidoben; a szerver `0.0.0.0`-n erre a portra all be.
+> Igy a build/inditas determinisztikus, nem fugg a Nixpacks auto-detektalastol.
 
 > A `PORT`-ot a Railway adja; a szerver `0.0.0.0`-n erre a portra all be.
 

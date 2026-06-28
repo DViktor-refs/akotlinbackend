@@ -22,8 +22,10 @@ import io.ktor.server.plugins.cors.routing.CORS
 import io.ktor.server.plugins.statuspages.StatusPages
 import io.ktor.server.response.respond
 import io.ktor.server.response.respondText
+import io.ktor.server.routing.delete
 import io.ktor.server.routing.get
-import io.ktor.server.routing.handle
+import io.ktor.server.routing.post
+import io.ktor.server.routing.put
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
 import kotlinx.serialization.json.JsonArray
@@ -142,9 +144,10 @@ fun Application.module() {
 
         // 404 fallback (minden mas utvonalra)
         route("{...}") {
-            handle {
-                call.respond(HttpStatusCode.NotFound, ErrorResponse("Nincs ilyen vegpont."))
-            }
+            get { call.respond(HttpStatusCode.NotFound, ErrorResponse("Nincs ilyen vegpont.")) }
+            post { call.respond(HttpStatusCode.NotFound, ErrorResponse("Nincs ilyen vegpont.")) }
+            put { call.respond(HttpStatusCode.NotFound, ErrorResponse("Nincs ilyen vegpont.")) }
+            delete { call.respond(HttpStatusCode.NotFound, ErrorResponse("Nincs ilyen vegpont.")) }
         }
     }
 }
