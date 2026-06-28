@@ -1,0 +1,437 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bolt – admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Instrument+Sans:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#181b2a;        /* fo szoveg, sotet tinta */
+    --paper:#f3f2ec;      /* lap hatter */
+    --card:#ffffff;       /* kartyak */
+    --line:#e2e0d6;       /* halvany vonalak */
+    --cobalt:#2740e0;     /* fo akcio */
+    --cobalt-d:#1c31b8;
+    --amber:#d97a1f;      /* arak / kiemeles */
+    --muted:#6a6e80;      /* masodlagos szoveg */
+    --bad:#c0392b;
+    --ok:#2e7d4f;
+    --radius:14px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:"Instrument Sans",system-ui,sans-serif;
+    font-size:16px;line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3{font-family:"Space Grotesk",sans-serif;font-weight:600;letter-spacing:-.01em;margin:0}
+  button{font-family:inherit;cursor:pointer}
+  input{font-family:inherit}
+  .mono{font-family:"Space Mono",monospace}
+  .hidden{display:none !important}
+
+  /* ---------- LOGIN ---------- */
+  .login-wrap{min-height:100vh;display:grid;place-items:center;padding:24px}
+  .till{
+    width:100%;max-width:380px;background:var(--card);border:1px solid var(--line);
+    border-radius:var(--radius);padding:30px 28px 26px;
+    box-shadow:0 1px 0 var(--line),0 22px 50px -30px rgba(24,27,42,.4);
+  }
+  .brand{font-family:"Space Grotesk";font-weight:700;font-size:1.55rem;letter-spacing:-.02em}
+  .brand .dot{color:var(--cobalt)}
+  .till p.lead{color:var(--muted);margin:.4rem 0 1.4rem;font-size:.95rem}
+  label{display:block;font-size:.78rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:14px 0 6px;font-weight:600}
+  .field{
+    width:100%;padding:11px 13px;border:1.5px solid var(--line);border-radius:10px;
+    background:#fff;font-size:1rem;color:var(--ink);
+  }
+  .field:focus{outline:none;border-color:var(--cobalt);box-shadow:0 0 0 3px rgba(39,64,224,.14)}
+  .btn{
+    border:none;border-radius:10px;background:var(--cobalt);color:#fff;
+    font-weight:600;font-size:1rem;padding:12px 16px;width:100%;margin-top:18px;
+    transition:background .15s ease,transform .05s ease;
+  }
+  .btn:hover{background:var(--cobalt-d)}
+  .btn:active{transform:translateY(1px)}
+  .btn:disabled{opacity:.6;cursor:default}
+  .hint{font-size:.82rem;color:var(--muted);margin-top:14px;text-align:center}
+  .hint code{background:var(--paper);border:1px solid var(--line);border-radius:5px;padding:1px 6px;font-family:"Space Mono",monospace}
+  .msg{margin-top:14px;font-size:.9rem;min-height:1.2em}
+  .msg.bad{color:var(--bad)} .msg.ok{color:var(--ok)}
+  details.cfg{margin-top:16px}
+  details.cfg summary{cursor:pointer;font-size:.8rem;color:var(--muted)}
+
+  /* ---------- SHELL ---------- */
+  header.bar{
+    position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:16px;
+    padding:14px 22px;background:rgba(243,242,236,.86);backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--line);
+  }
+  header.bar .brand{font-size:1.25rem}
+  header.bar .spacer{flex:1}
+  .who{font-size:.85rem;color:var(--muted)}
+  .who b{color:var(--ink)}
+  .ghost{background:none;border:1.5px solid var(--line);color:var(--ink);border-radius:9px;padding:8px 13px;font-weight:600;font-size:.85rem}
+  .ghost:hover{border-color:var(--ink)}
+
+  .layout{max-width:1180px;margin:0 auto;padding:22px;display:grid;grid-template-columns:1fr 340px;gap:26px;align-items:start}
+
+  .search{display:flex;gap:10px;margin-bottom:18px}
+  .search .field{margin:0}
+  .section-eyebrow{font-size:.75rem;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);font-weight:600;margin-bottom:10px}
+
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:16px}
+  .product{
+    background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+    overflow:hidden;display:flex;flex-direction:column;transition:transform .12s ease,box-shadow .12s ease;
+  }
+  .product:hover{transform:translateY(-3px);box-shadow:0 18px 30px -22px rgba(24,27,42,.45)}
+  .product .thumb{aspect-ratio:1;background:#faf9f4 center/contain no-repeat;border-bottom:1px solid var(--line)}
+  .product .body{padding:12px 13px 14px;display:flex;flex-direction:column;gap:4px;flex:1}
+  .product .cat{font-size:.7rem;text-transform:uppercase;letter-spacing:.09em;color:var(--muted)}
+  .product .title{font-family:"Space Grotesk";font-weight:600;font-size:.98rem;line-height:1.25}
+  .product .rating{font-size:.78rem;color:var(--muted)}
+  .product .foot{display:flex;align-items:center;justify-content:space-between;margin-top:auto;padding-top:10px}
+  .price{font-family:"Space Mono";font-weight:700;color:var(--amber);font-size:1rem;white-space:nowrap}
+  .add{border:none;background:var(--ink);color:#fff;border-radius:8px;padding:7px 12px;font-weight:600;font-size:.82rem}
+  .add:hover{background:#000}
+
+  /* ---------- RECEIPT / CART ---------- */
+  .receipt{
+    position:sticky;top:78px;background:var(--card);border:1px solid var(--line);
+    border-radius:var(--radius) var(--radius) 0 0;padding:20px 20px 26px;
+  }
+  .receipt::after{ /* perforalt, leszakitott also el */
+    content:"";display:block;height:12px;margin:18px -20px -26px;
+    background:radial-gradient(circle at 7px 12px,transparent 7px,var(--card) 8px) repeat-x;
+    background-size:16px 12px;
+  }
+  .receipt h2{font-size:1.05rem;display:flex;align-items:center;gap:8px}
+  .receipt .count{font-family:"Space Mono";font-size:.8rem;background:var(--paper);border:1px solid var(--line);border-radius:20px;padding:1px 9px;color:var(--muted)}
+  .cart-empty{color:var(--muted);font-size:.92rem;padding:18px 0;text-align:center}
+  .line-items{margin:14px 0;display:flex;flex-direction:column;gap:12px}
+  .li{display:grid;grid-template-columns:1fr auto;gap:4px 10px;font-size:.9rem}
+  .li .nm{font-weight:500;line-height:1.2}
+  .li .lt{font-family:"Space Mono";font-weight:700}
+  .qty{display:flex;align-items:center;gap:8px;color:var(--muted)}
+  .qbtn{width:24px;height:24px;border:1px solid var(--line);background:#fff;border-radius:6px;font-weight:700;line-height:1;color:var(--ink)}
+  .qbtn:hover{border-color:var(--ink)}
+  .rm{background:none;border:none;color:var(--muted);font-size:.78rem;text-decoration:underline;padding:0;margin-left:4px}
+  .rm:hover{color:var(--bad)}
+  .total{display:flex;justify-content:space-between;align-items:baseline;border-top:1.5px dashed var(--line);padding-top:14px;margin-top:6px}
+  .total .lbl{font-size:.78rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted)}
+  .total .amt{font-family:"Space Mono";font-weight:700;font-size:1.35rem}
+  .pay{margin-top:16px}
+  .cart-msg{font-size:.85rem;margin-top:10px;min-height:1.1em}
+  .cart-msg.bad{color:var(--bad)} .cart-msg.ok{color:var(--ok)}
+
+  .state{padding:50px 10px;text-align:center;color:var(--muted)}
+  .state b{color:var(--ink);display:block;font-family:"Space Grotesk";font-size:1.1rem;margin-bottom:6px}
+
+  @media (max-width:820px){
+    .layout{grid-template-columns:1fr}
+    .receipt{position:static;border-radius:var(--radius)}
+  }
+  @media (prefers-reduced-motion:reduce){*{transition:none !important}}
+</style>
+</head>
+<body>
+
+<!-- ===================== LOGIN ===================== -->
+<div id="login" class="login-wrap">
+  <form class="till" id="loginForm" autocomplete="off">
+    <div class="brand">Bolt<span class="dot">.</span></div>
+    <p class="lead">Admin belépés a kezelőfelülethez.</p>
+
+    <label for="u">Felhasználónév</label>
+    <input class="field" id="u" type="text" value="admin" required>
+
+    <label for="p">Jelszó</label>
+    <input class="field" id="p" type="password" placeholder="••••••" required>
+
+    <button class="btn" id="loginBtn" type="submit">Belépés</button>
+    <div class="msg" id="loginMsg"></div>
+
+    <p class="hint">Hozzáférés csak adminnak: <code>admin / admin</code></p>
+
+    <details class="cfg">
+      <summary>Backend URL beállítása</summary>
+      <label for="api">API cím</label>
+      <input class="field" id="api" type="text" placeholder="https://a-backended.up.railway.app">
+    </details>
+  </form>
+</div>
+
+<!-- ===================== APP ===================== -->
+<div id="app" class="hidden">
+  <header class="bar">
+    <div class="brand">Bolt<span class="dot">.</span></div>
+    <div class="spacer"></div>
+    <span class="who">Belépve: <b id="whoName">admin</b></span>
+    <button class="ghost" id="logoutBtn">Kilépés</button>
+  </header>
+
+  <div class="layout">
+    <main>
+      <div class="search">
+        <input class="field" id="searchInput" type="text" placeholder="Keresés terméknévre, márkára…">
+        <button class="ghost" id="searchBtn">Keresés</button>
+      </div>
+      <div class="section-eyebrow" id="catalogLabel">Katalógus</div>
+      <div class="grid" id="grid"></div>
+      <div class="state hidden" id="emptyState">
+        <b>Nincs megjeleníthető termék.</b>
+        A termékek induláskor töltődnek be a dummyjson-ról. Adminként újratöltheted a
+        <code>POST /api/products/reseed</code> végponttal.
+      </div>
+    </main>
+
+    <aside>
+      <div class="receipt">
+        <h2>Kosár <span class="count" id="cartCount">0</span></h2>
+        <div id="cartBody">
+          <div class="cart-empty">A kosár üres.</div>
+        </div>
+        <div class="total">
+          <span class="lbl">Végösszeg</span>
+          <span class="amt" id="cartTotal">0 Ft</span>
+        </div>
+        <button class="btn pay" id="payBtn" disabled>Fizetés (Barion)</button>
+        <div class="cart-msg" id="cartMsg"></div>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<script>
+/* ===== Konfiguráció ===== */
+// A pénznem felirat (a backend CURRENCY-jéhez igazítsd: HUF -> "Ft", EUR -> "€" stb.)
+const CURRENCY = "Ft";
+// Alapértelmezett API cím: ha böngészőből (http) nyitod, az aktuális origin; fájlból megnyitva localhost.
+const DEFAULT_API = location.protocol.startsWith("http") ? location.origin : "http://localhost:3000";
+
+const state = {
+  apiBase: localStorage.getItem("apiBase") || DEFAULT_API,
+  token: localStorage.getItem("token") || null,
+  user: null,
+};
+
+/* ===== Segédfüggvények ===== */
+const $ = (id) => document.getElementById(id);
+
+function fmt(n){
+  const v = Math.round(Number(n) || 0);
+  return v.toLocaleString("hu-HU") + " " + CURRENCY;
+}
+
+async function api(path, { method = "GET", body, auth = true } = {}){
+  const headers = { "Content-Type": "application/json" };
+  if (auth && state.token) headers.Authorization = "Bearer " + state.token;
+  const res = await fetch(state.apiBase.replace(/\/$/, "") + path, {
+    method, headers, body: body ? JSON.stringify(body) : undefined,
+  });
+  let data = null;
+  try { data = await res.json(); } catch { /* ures valasz */ }
+  if (!res.ok) {
+    const err = new Error((data && (data.error || data.detail)) || ("HTTP " + res.status));
+    err.status = res.status; err.data = data;
+    throw err;
+  }
+  return data;
+}
+
+function show(screen){
+  $("login").classList.toggle("hidden", screen !== "login");
+  $("app").classList.toggle("hidden", screen !== "app");
+}
+
+/* ===== Belépés (CSAK admin szerep enged tovább) ===== */
+$("loginForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const msg = $("loginMsg"); msg.className = "msg"; msg.textContent = "";
+  const apiVal = $("api").value.trim();
+  if (apiVal) { state.apiBase = apiVal; localStorage.setItem("apiBase", apiVal); }
+
+  const username = $("u").value.trim();
+  const password = $("p").value;
+  $("loginBtn").disabled = true; $("loginBtn").textContent = "Belépés…";
+  try {
+    const out = await api("/api/auth/login", { method:"POST", auth:false, body:{ username, password } });
+    if (!out.user || out.user.role !== "admin") {
+      // Érvényes belépés, de nem admin -> nem engedjük tovább
+      msg.className = "msg bad";
+      msg.textContent = "Csak admin felhasználó léphet be ide.";
+      return;
+    }
+    state.token = out.token; state.user = out.user;
+    localStorage.setItem("token", out.token);
+    enterApp();
+  } catch (err) {
+    msg.className = "msg bad";
+    msg.textContent = err.status === 401 ? "Hibás felhasználónév vagy jelszó." :
+                      "Nem sikerült csatlakozni a backendhez. Ellenőrizd az API címet.";
+  } finally {
+    $("loginBtn").disabled = false; $("loginBtn").textContent = "Belépés";
+  }
+});
+
+$("api").value = (state.apiBase !== DEFAULT_API) ? state.apiBase : "";
+
+/* ===== Kilépés ===== */
+$("logoutBtn").addEventListener("click", () => {
+  state.token = null; state.user = null;
+  localStorage.removeItem("token");
+  show("login");
+  $("p").value = "";
+});
+
+/* ===== App betöltése ===== */
+function enterApp(){
+  $("whoName").textContent = state.user ? state.user.username : "admin";
+  show("app");
+  loadProducts();
+  loadCart();
+}
+
+/* ===== Termékek ===== */
+async function loadProducts(q = ""){
+  const grid = $("grid");
+  grid.innerHTML = "<div class='state'>Töltés…</div>";
+  try {
+    const qs = "?limit=100" + (q ? "&q=" + encodeURIComponent(q) : "");
+    const data = await api("/api/products" + qs, { auth:false });
+    const products = data.products || [];
+    $("catalogLabel").textContent = q ? `Találatok: "${q}" (${products.length})` : `Katalógus · ${data.total} termék`;
+    if (!products.length){ grid.innerHTML = ""; $("emptyState").classList.remove("hidden"); return; }
+    $("emptyState").classList.add("hidden");
+    grid.innerHTML = products.map(p => `
+      <div class="product">
+        <div class="thumb" style="background-image:url('${p.thumbnail || ""}')"></div>
+        <div class="body">
+          <div class="cat">${p.category || ""}</div>
+          <div class="title">${escapeHtml(p.title || "")}</div>
+          <div class="rating">★ ${p.rating ?? "–"} · ${p.brand || ""}</div>
+          <div class="foot">
+            <span class="price">${fmt(p.price)}</span>
+            <button class="add" data-id="${p.id}">Kosárba</button>
+          </div>
+        </div>
+      </div>`).join("");
+    grid.querySelectorAll(".add").forEach(b =>
+      b.addEventListener("click", () => addToCart(parseInt(b.dataset.id), b)));
+  } catch (err) {
+    grid.innerHTML = `<div class="state"><b>Nem sikerült betölteni a termékeket.</b>${escapeHtml(err.message)}</div>`;
+  }
+}
+
+$("searchBtn").addEventListener("click", () => loadProducts($("searchInput").value.trim()));
+$("searchInput").addEventListener("keydown", (e) => { if (e.key === "Enter") loadProducts($("searchInput").value.trim()); });
+
+/* ===== Kosár ===== */
+async function addToCart(productId, btn){
+  if (btn){ btn.disabled = true; btn.textContent = "✓"; }
+  try { await api("/api/cart", { method:"POST", body:{ productId, quantity:1 } }); await loadCart(); }
+  catch (err) { setCartMsg(err.message, true); }
+  finally { if (btn){ setTimeout(() => { btn.disabled = false; btn.textContent = "Kosárba"; }, 600); } }
+}
+
+async function setQty(productId, quantity){
+  try {
+    if (quantity < 1) await api("/api/cart/" + productId, { method:"DELETE" });
+    else await api("/api/cart/" + productId, { method:"PUT", body:{ quantity } });
+    await loadCart();
+  } catch (err) { setCartMsg(err.message, true); }
+}
+
+async function removeItem(productId){
+  try { await api("/api/cart/" + productId, { method:"DELETE" }); await loadCart(); }
+  catch (err) { setCartMsg(err.message, true); }
+}
+
+async function loadCart(){
+  try {
+    const cart = await api("/api/cart");
+    renderCart(cart);
+  } catch (err) {
+    if (err.status === 401){ // token lejart
+      $("logoutBtn").click();
+    }
+  }
+}
+
+function renderCart(cart){
+  const items = cart.items || [];
+  $("cartCount").textContent = cart.count || 0;
+  $("cartTotal").textContent = fmt(cart.total);
+  $("payBtn").disabled = items.length === 0;
+  const body = $("cartBody");
+  if (!items.length){ body.innerHTML = "<div class='cart-empty'>A kosár üres.</div>"; return; }
+  body.innerHTML = `<div class="line-items">${items.map(i => `
+    <div class="li">
+      <div>
+        <div class="nm">${escapeHtml(i.title)}</div>
+        <div class="qty">
+          <button class="qbtn" data-dec="${i.productId}">−</button>
+          <span>${i.quantity}</span>
+          <button class="qbtn" data-inc="${i.productId}">+</button>
+          <button class="rm" data-rm="${i.productId}">törlés</button>
+        </div>
+      </div>
+      <div class="lt">${fmt(i.lineTotal)}</div>
+    </div>`).join("")}</div>`;
+  body.querySelectorAll("[data-inc]").forEach(b => b.addEventListener("click", () => {
+    const it = items.find(x => x.productId == b.dataset.inc); setQty(it.productId, it.quantity + 1); }));
+  body.querySelectorAll("[data-dec]").forEach(b => b.addEventListener("click", () => {
+    const it = items.find(x => x.productId == b.dataset.dec); setQty(it.productId, it.quantity - 1); }));
+  body.querySelectorAll("[data-rm]").forEach(b => b.addEventListener("click", () => removeItem(parseInt(b.dataset.rm))));
+}
+
+function setCartMsg(text, bad){
+  const el = $("cartMsg"); el.className = "cart-msg " + (bad ? "bad" : "ok"); el.textContent = text;
+  setTimeout(() => { if (el.textContent === text) el.textContent = ""; }, 5000);
+}
+
+/* ===== Fizetés (Barion) ===== */
+$("payBtn").addEventListener("click", async () => {
+  const btn = $("payBtn"); btn.disabled = true; btn.textContent = "Fizetés indítása…";
+  setCartMsg("", false);
+  try {
+    const out = await api("/api/orders/checkout", { method:"POST" });
+    if (out.gatewayUrl){
+      setCartMsg("Átirányítás a Barion fizetéshez…", false);
+      window.location.href = out.gatewayUrl;  // a vásárlót a Barion oldalára küldjük
+    } else {
+      setCartMsg("Nem érkezett fizetési link.", true);
+    }
+  } catch (err) {
+    setCartMsg("Fizetés indítása sikertelen: " + err.message, true);
+  } finally {
+    btn.disabled = false; btn.textContent = "Fizetés (Barion)";
+  }
+});
+
+/* ===== XSS védelem a betöltött szövegekhez ===== */
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+}
+
+/* ===== Indulás: ha van token, ellenőrizzük hogy admin-e ===== */
+(async function init(){
+  if (state.token){
+    try {
+      const me = await api("/api/auth/me");
+      if (me && me.role === "admin"){ state.user = me; enterApp(); return; }
+    } catch { /* ervenytelen token */ }
+    localStorage.removeItem("token"); state.token = null;
+  }
+  show("login");
+})();
+</script>
+</body>
+</html>
